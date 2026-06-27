@@ -46,7 +46,7 @@ function Node(props: { node: NodeData }) {
 function ParentNode(props: { node: ParentNodeData }) {
     return (
         <div
-            style={`display: flex; padding: 10px; flex-direction: ${props.node.split === 'h' ? 'row' : 'column'}; height: 100%; width: 100%; border: 1px solid red;`}
+            style={`display: flex; padding: 10px; flex-direction: ${props.node.split === 'h' ? 'row' : 'column'}; height: 100%; width: 100%; border: 1px dashed maroon;`}
         >
             <For each={props.node.children}>
                 {(child) => {
@@ -193,7 +193,7 @@ function App() {
                 if (ev.key === "j") {
                     onClick("d")
                 }
-            }} style="display: flex; flex-direction: column; border: 1px solid red; height: 100%; width: 100%;">
+            }} style="display: flex; flex-direction: column; height: 100%; width: 100%;">
                 <div>
                     h/j/k/l for direction (or arrow keys);
                     Hold shift and then press direction for split;
