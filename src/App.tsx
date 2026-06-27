@@ -20,7 +20,7 @@ interface NodeData {
 const Ctx = createContext<{
     setSelectedNode: (node: NodeData) => void
     selectedNode: Accessor<NodeData | null>
-}>({ selectedNode: null, setSelectedNode: () => { } })
+}>({ selectedNode: () => null, setSelectedNode: () => { } })
 
 function Node(props: { node: NodeData }) {
     const ctx = useContext(Ctx)
@@ -76,10 +76,10 @@ function traverse(tree: NodeData | ParentNodeData | null, dir: Dir): NodeData | 
                 return target
             } else {
                 const firstChild = target.children.at(0)
-                if (firstChild.type === "node") {
+                if (firstChild?.type === "node") {
                     return firstChild
                 } else {
-                    return traverse(firstChild, dir)
+                    return traverse(firstChild ?? null, dir)
                 }
             }
         }
@@ -144,7 +144,7 @@ function App() {
                 return;
             }
             console.log(event.key)
-            const splitKey = {
+            const splitKey: Record<string, Dir> = {
                 "j": "d",
                 "h": "l",
                 "k": "u",
