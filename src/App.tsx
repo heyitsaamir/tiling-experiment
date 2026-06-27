@@ -1,4 +1,4 @@
-import { createContext, createSignal, For, Show, useContext, type Accessor } from 'solid-js'
+import { createContext, createSignal, For, onCleanup, onMount, Show, useContext, type Accessor } from 'solid-js'
 import './App.css'
 
 /*
@@ -14,7 +14,7 @@ type Children = ParentNodeData | NodeData
 
 interface ParentNodeData {
     type: 'parent'
-    children: [Children, Children]
+    children: Children[]
     split: 'h' | 'v'
 }
 interface NodeData {
@@ -72,30 +72,87 @@ function App() {
         setTileCount(0)
     }
 
-    const onClick = (dir: 'h' | 'v') => {
+    const onClick = (dir: 'r' | 'l' | 'u' | 'd') => {
         const existingTile = selectedNode()
         if (!existingTile) return;
         const newTile: NodeData = { type: 'node' as const, name: (tileCount() + 1).toString(), parent: null }
         setTileCount(tileCount() + 1)
         const currentParent = existingTile.parent;
-        const newParent: ParentNodeData = { type: 'parent' as const, children: [existingTile, newTile], split: dir }
-        existingTile.parent = newParent;
-        newTile.parent = newParent
-        if (currentParent) {
-            const existingChildren = currentParent.children;
-            const index = existingChildren[0] === existingTile ? 0 : 1
-            existingChildren[index] = newParent
+        const splitType = ['r', 'l'].includes(dir) ? 'h' : 'v';
+        const next = ['d', 'r'].includes(dir)
+        if (currentParent?.split === splitType) {
+            // if same, just add it 
+            newTile.parent = currentParent
+            const index = currentParent.children.indexOf(existingTile);
+            const targetIndex = next ? index + 1 : index
+            currentParent.children.splice(targetIndex, 0, newTile)
             setTile((prev) => ({ ...prev }))
         } else {
-            setTile(newParent)
+            const newParent: ParentNodeData = { type: 'parent' as const, children: next ? [existingTile, newTile] : [newTile, existingTile], split: splitType, }
+            existingTile.parent = newParent;
+            newTile.parent = newParent
+            if (currentParent) {
+                // If there already is a current parent
+                const existingChildren = currentParent.children;
+                const index = currentParent.children.indexOf(existingTile);
+                existingChildren[index] = newParent
+                setTile((prev) => ({ ...prev }))
+            } else {
+                setTile(newParent)
+            }
         }
+
+        setSelectedNode(newTile)
     }
+    onMount(() => {
+        const keyDownEvent = (event: KeyboardEvent) => {
+            if (event.key.toLocaleLowerCase() === "r") {
+                onReset()
+                return;
+            }
+            const splitKey = {
+                "j": "d",
+                "h": "l",
+                "k": "u",
+                "l": "r"
+            } as const;
+            const dir = splitKey[event.key.toLocaleLowerCase()]
+            const handleSplit = () => {
+                if (!dir) {
+                    return
+                }
+                onClick(dir)
+            }
+
+            const handleTraversal = () => {
+                if (!dir) {
+                    return
+                }
+                const n = selectedNode()
+                // if you want to go left,
+            }
+
+            if (event.shiftKey) {
+                handleSplit()
+            }
+        }
+        window.addEventListener("keypress", keyDownEvent)
+        onCleanup(() => {
+            window.removeEventListener("keypress", keyDownEvent)
+        })
+    })
     return (
         <Ctx.Provider value={{ selectedNode: selectedNode, setSelectedNode: setSelectedNode }}>
-            <div style="display: flex; flex-direction: column; border: 1px solid red; height: 100%; width: 100%;">
+            <div onKeyPress={(ev) => {
+                if (ev.key === "j") {
+                    onClick("d")
+                }
+            }} style="display: flex; flex-direction: column; border: 1px solid red; height: 100%; width: 100%;">
                 <div>
-                    <button onClick={[onClick, 'v']}>Vertical</button>
-                    <button onClick={[onClick, 'h']}>Horizontal</button>
+                    <button onClick={[onClick, 'r']}>Right</button>
+                    <button onClick={[onClick, 'u']}>Up</button>
+                    <button onClick={[onClick, 'l']}>Left</button>
+                    <button onClick={[onClick, 'd']}>Down</button>
                     <button onClick={onReset}>Reset</button>
                 </div>
                 <div style="display: flex; border: 1px solid blue; height: 100%; width: 100%;">
