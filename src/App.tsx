@@ -28,7 +28,7 @@ function Node(props: { node: NodeData }) {
         const isSelected = ctx.selectedNode() === props.node;
         const borderSize = isSelected ? 3 : 1;
         const borderColor = isSelected ? "black" : "orange"
-        return `width: 100%; height: 100%; border: ${borderSize}px solid ${borderColor};`
+        return `display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border: ${borderSize}px solid ${borderColor};`
     }
 
     return (
@@ -38,7 +38,7 @@ function Node(props: { node: NodeData }) {
             }}
             style={style()}
         >
-            {props.node.name} isSelected: {ctx.selectedNode() === props.node ? 'true' : 'false'}
+            {props.node.name}
         </div>
     )
 }
@@ -46,7 +46,7 @@ function Node(props: { node: NodeData }) {
 function ParentNode(props: { node: ParentNodeData }) {
     return (
         <div
-            style={`display: flex; flex-direction: ${props.node.split === 'h' ? 'row' : 'column'}; height: 100%; width: 100%; border: 1px solid red;`}
+            style={`display: flex; padding: 10px; flex-direction: ${props.node.split === 'h' ? 'row' : 'column'}; height: 100%; width: 100%; border: 1px solid red;`}
         >
             <For each={props.node.children}>
                 {(child) => {
@@ -159,6 +159,7 @@ function App() {
                 if (!dir) {
                     return
                 }
+                event.preventDefault()
                 onClick(dir)
             }
 
@@ -166,6 +167,7 @@ function App() {
                 if (!dir) {
                     return
                 }
+                event.preventDefault();
                 const n = selectedNode()
 
                 const nextNode = traverse(n, dir)
