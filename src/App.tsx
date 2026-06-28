@@ -118,6 +118,16 @@ function App() {
         setTileCount(0)
     }
 
+    const rerender = (prev: Children) => {
+        const newNode = { ...prev };
+        if (newNode.type === "parent") {
+            newNode.children.forEach(child => {
+                child.parent = newNode
+            })
+        }
+        return newNode
+    }
+
     const onDelete = (): void => {
         const node = selectedNode();
         if (!node) return;
@@ -149,7 +159,7 @@ function App() {
             return
         }
         remove(node)
-        setTile(prev => ({ ...prev }))
+        setTile(rerender)
         setSelectedNode(traversedNode)
     }
 
@@ -184,7 +194,7 @@ function App() {
                 const existingChildren = currentParent.children;
                 const index = currentParent.children.indexOf(existingTile);
                 existingChildren[index] = newParent
-                setTile((prev) => ({ ...prev }))
+                setTile(rerender)
             } else {
                 setTile(newParent)
             }
@@ -249,8 +259,8 @@ function App() {
             <div style="display: flex; flex-direction: column; height: 100%; width: 100%;">
                 <div>
                     h/j/k/l for direction (or arrow keys);
-                    Hold shift and then press direction for split;
-                    "d" for delete
+                    Hold shift and then press direction for new tile;
+                    "d" for delete;
                     "r" for reset
                 </div>
                 <div style="display: flex; border: 1px solid blue; height: 100%; width: 100%;">
