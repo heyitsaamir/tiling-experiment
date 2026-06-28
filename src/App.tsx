@@ -175,6 +175,9 @@ function App() {
         if (!existingTile) return;
 
         const movableNode = getMovableNode()
+        if (movableNode == existingTile) {
+            return;
+        }
         if (movableNode) {
             // first delete teh movable node, before moving it
             onDelete(movableNode)
@@ -182,6 +185,9 @@ function App() {
         const newTile: NodeData = movableNode != null ? { ...movableNode, parent: null } : { type: 'node' as const, name: (tileCount() + 1).toString(), parent: null, }
         setTileCount(tileCount() + 1)
         setSelectedNode(newTile)
+        if (movableNode) {
+            setMovableNode(newTile)
+        }
 
         const currentParent = existingTile.parent;
         const splitType = ['r', 'l'].includes(dir) ? 'h' : 'v';
