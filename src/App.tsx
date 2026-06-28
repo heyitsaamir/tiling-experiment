@@ -30,7 +30,7 @@ function Node(props: { node: NodeData }) {
         const isSelected = selectedNode() === props.node;
         const isMovable = movableNode() === props.node;
         const borderSize = isSelected || isMovable ? 3 : 1;
-        const background = isMovable ? "lightblue" : isSelected ? "lightsalmon" : ""
+        const background = isSelected ? "lightsalmon" : ""
         const borderColor = isMovable ? 'blue' : isSelected ? "black" : "orange"
         return `display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; outline: ${borderSize}px solid ${borderColor}; background-color: ${background}`
     }
@@ -300,7 +300,8 @@ function App() {
                     Hold shift and then press direction for new tile;
                     "d" for delete;
                     Space for toggling movable node, then Shift+Direction to move;
-                    "r" for reset
+                    "r" for reset;
+                    <a href="/flip-demo" style="margin-left: 12px;">3-box animation demo</a>
                 </div>
                 <div style="display: flex; border: 1px solid blue; height: 100%; width: 100%;">
                     <Show when={tile()} keyed>
