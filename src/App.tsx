@@ -225,14 +225,12 @@ function App() {
         const selectedNode = getSelectedNode()
         if (!selectedNode) return;
         const movableNode = getMovableNode();
-        if (!movableNode) {
-            setMovableNode(selectedNode);
-            return;
-        }
 
         if (movableNode === selectedNode) {
             setMovableNode(null)
             return;
+        } else {
+            setMovableNode(selectedNode)
         }
 
     }
