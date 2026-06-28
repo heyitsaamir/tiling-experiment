@@ -32,7 +32,7 @@ function Node(props: { node: NodeData }) {
         const borderSize = isSelected || isMovable ? 3 : 1;
         const background = isMovable ? "lightblue" : isSelected ? "lightsalmon" : ""
         const borderColor = isMovable ? 'blue' : isSelected ? "black" : "orange"
-        return `display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border: ${borderSize}px solid ${borderColor}; background-color: ${background}`
+        return `display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; outline: ${borderSize}px solid ${borderColor}; background-color: ${background}`
     }
 
     return (
@@ -50,7 +50,7 @@ function Node(props: { node: NodeData }) {
 function ParentNode(props: { node: ParentNodeData }) {
     return (
         <div
-            style={`display: flex; padding: 10px; flex-direction: ${props.node.split === 'h' ? 'row' : 'column'}; height: 100%; width: 100%; border: 1px dashed maroon;`}
+            style={`display: flex; flex-direction: ${props.node.split === 'h' ? 'row' : 'column'}; height: 100%; width: 100%;`}
         >
             <For each={props.node.children}>
                 {(child) => {
