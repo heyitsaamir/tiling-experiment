@@ -189,11 +189,7 @@ function App() {
     })
     return (
         <Ctx.Provider value={{ selectedNode: selectedNode, setSelectedNode: setSelectedNode }}>
-            <div onKeyDown={(ev) => {
-                if (ev.key === "j") {
-                    onClick("d")
-                }
-            }} style="display: flex; flex-direction: column; height: 100%; width: 100%;">
+            <div style="display: flex; flex-direction: column; height: 100%; width: 100%;">
                 <div>
                     h/j/k/l for direction (or arrow keys);
                     Hold shift and then press direction for split;
