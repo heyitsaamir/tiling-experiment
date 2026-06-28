@@ -87,6 +87,25 @@ function traverse(tree: NodeData | ParentNodeData | null, dir: Dir): NodeData | 
     return traverse(parent, dir)
 }
 
+function remove(tree: NodeData) {
+    // remove the node from the parent. If the parent only has this node, then merge it with its parent
+    if (!tree.parent) throw new Error("No Parent!")
+    const children = tree.parent.children;
+    const index = children.indexOf(tree);
+    children.splice(index, 1);
+
+    if (children.length === 1) {
+        // No point in keeping this parent. Let's move the node up
+        const parentsParent = tree.parent.parent;
+        if (parentsParent) {
+            const parentsChildren = parentsParent.children;
+            const index = parentsChildren.indexOf(tree.parent);
+            parentsChildren[index] = children[0]
+            children[0].parent = parentsParent
+        }
+    }
+}
+
 
 function App() {
     const [tile, setTile] = createSignal<ParentNodeData | NodeData>({ type: 'node', name: '0', parent: null })
@@ -94,9 +113,44 @@ function App() {
     const [tileCount, setTileCount] = createSignal(0)
 
     const onReset = () => {
-        setTile({ type: 'node', name: '0', parent: null, r: null, l: null, d: null, u: null })
+        setTile({ type: 'node', name: '0', parent: null, })
         setSelectedNode(null);
         setTileCount(0)
+    }
+
+    const onDelete = (): void => {
+        const node = selectedNode();
+        if (!node) return;
+        const parentDir = node.parent?.split;
+        const isFirst = node.parent?.children.indexOf(node) === 0
+        let dirToTry: Dir[]
+        if (parentDir === "h") {
+            dirToTry = ['l', 'r']
+            if (isFirst) {
+                dirToTry.reverse()
+            }
+            dirToTry.push('u', 'd')
+        } else {
+            dirToTry = ['u', 'd']
+            if (isFirst) {
+                dirToTry.reverse()
+            }
+            dirToTry.push('l', 'r')
+        }
+
+        let traversedNode: NodeData | null = null
+        for (let i = 0; i < dirToTry.length; i++) {
+            const dir = dirToTry[i];
+            traversedNode = traverse(node, dir)
+            if (traversedNode) break
+        }
+        if (!traversedNode) {
+            console.error("Can't remove last node")
+            return
+        }
+        remove(node)
+        setTile(prev => ({ ...prev }))
+        setSelectedNode(traversedNode)
     }
 
     const onClick = (dir: 'r' | 'l' | 'u' | 'd') => {
@@ -143,7 +197,10 @@ function App() {
                 onReset()
                 return;
             }
-            console.log(event.key)
+            if (event.key.toLocaleLowerCase() === "d") {
+                onDelete()
+                return;
+            }
             const splitKey: Record<string, Dir> = {
                 "j": "d",
                 "h": "l",
@@ -193,6 +250,7 @@ function App() {
                 <div>
                     h/j/k/l for direction (or arrow keys);
                     Hold shift and then press direction for split;
+                    "d" for delete
                     "r" for reset
                 </div>
                 <div style="display: flex; border: 1px solid blue; height: 100%; width: 100%;">
