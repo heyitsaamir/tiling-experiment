@@ -1,4 +1,4 @@
-import { createContext, createSignal, For, onCleanup, onMount, Show, useContext, type Accessor } from 'solid-js'
+import { createContext, createSignal, For, onCleanup, onMount, Show, useContext, type Signal } from 'solid-js'
 import './App.css'
 
 type Children = ParentNodeData | NodeData
@@ -18,23 +18,26 @@ interface NodeData {
 }
 
 const Ctx = createContext<{
-    setSelectedNode: (node: NodeData) => void
-    selectedNode: Accessor<NodeData | null>
-}>({ selectedNode: () => null, setSelectedNode: () => { } })
+    selectedNode: Signal<NodeData | null>;
+    movableNode: Signal<NodeData | null>;
+}>({ selectedNode: [] as unknown as Signal<NodeData | null>, movableNode: [] as unknown as Signal<NodeData | null> })
 
 function Node(props: { node: NodeData }) {
     const ctx = useContext(Ctx)
+    const [selectedNode, setSelectedNode] = ctx?.selectedNode
+    const [movableNode] = ctx.movableNode
     const style = () => {
-        const isSelected = ctx.selectedNode() === props.node;
-        const borderSize = isSelected ? 3 : 1;
-        const borderColor = isSelected ? "black" : "orange"
+        const isSelected = selectedNode() === props.node;
+        const isMovable = movableNode() === props.node;
+        const borderSize = isSelected || isMovable ? 3 : 1;
+        const borderColor = isMovable ? 'blue' : isSelected ? "black" : "orange"
         return `display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border: ${borderSize}px solid ${borderColor};`
     }
 
     return (
         <div
             onClick={() => {
-                ctx.setSelectedNode(props.node)
+                setSelectedNode(props.node)
             }}
             style={style()}
         >
@@ -75,12 +78,11 @@ function traverse(tree: NodeData | ParentNodeData | null, dir: Dir): NodeData | 
             if (target.type === "node") {
                 return target
             } else {
-                const firstChild = target.children.at(0)
-                if (firstChild?.type === "node") {
-                    return firstChild
-                } else {
-                    return traverse(firstChild ?? null, dir)
+                let firstChild = target.children.at(0)
+                while (firstChild != null && firstChild.type !== 'node') {
+                    firstChild = firstChild.children.at(0)
                 }
+                return firstChild ?? null
             }
         }
     }
@@ -109,7 +111,8 @@ function remove(tree: NodeData) {
 
 function App() {
     const [tile, setTile] = createSignal<ParentNodeData | NodeData>({ type: 'node', name: '0', parent: null })
-    const [selectedNode, setSelectedNode] = createSignal<NodeData | null>(null)
+    const [getSelectedNode, setSelectedNode] = createSignal<NodeData | null>(null)
+    const [getMovableNode, setMovableNode] = createSignal<NodeData | null>(null)
     const [tileCount, setTileCount] = createSignal(0)
 
     const onReset = () => {
@@ -128,8 +131,8 @@ function App() {
         return newNode
     }
 
-    const onDelete = (): void => {
-        const node = selectedNode();
+    const onDelete = (inputNode?: NodeData): void => {
+        const node = inputNode ?? getSelectedNode();
         if (!node) return;
         const parentDir = node.parent?.split;
         const isFirst = node.parent?.children.indexOf(node) === 0
@@ -159,14 +162,23 @@ function App() {
             return
         }
         remove(node)
+        if (getMovableNode() === node) {
+            setMovableNode(null)
+        }
         setTile(rerender)
         setSelectedNode(traversedNode)
     }
 
     const onClick = (dir: 'r' | 'l' | 'u' | 'd') => {
-        const existingTile = selectedNode()
+        const existingTile = getSelectedNode()
         if (!existingTile) return;
-        const newTile: NodeData = { type: 'node' as const, name: (tileCount() + 1).toString(), parent: null, }
+
+        const movableNode = getMovableNode()
+        if (movableNode) {
+            // first delete teh movable node, before moving it
+            onDelete(movableNode)
+        }
+        const newTile: NodeData = movableNode != null ? { ...movableNode, parent: null } : { type: 'node' as const, name: (tileCount() + 1).toString(), parent: null, }
         setTileCount(tileCount() + 1)
         setSelectedNode(newTile)
 
@@ -201,6 +213,22 @@ function App() {
         }
 
     }
+
+    const onMove = () => {
+        const selectedNode = getSelectedNode()
+        if (!selectedNode) return;
+        const movableNode = getMovableNode();
+        if (!movableNode) {
+            setMovableNode(selectedNode);
+            return;
+        }
+
+        if (movableNode === selectedNode) {
+            setMovableNode(null)
+            return;
+        }
+
+    }
     onMount(() => {
         const keyDownEvent = (event: KeyboardEvent) => {
             if (event.key.toLocaleLowerCase() === "r") {
@@ -209,6 +237,11 @@ function App() {
             }
             if (event.key.toLocaleLowerCase() === "d") {
                 onDelete()
+                return;
+            }
+            if (event.key.toLocaleLowerCase() === " ") {
+                onMove()
+                event.preventDefault()
                 return;
             }
             const splitKey: Record<string, Dir> = {
@@ -235,7 +268,7 @@ function App() {
                     return
                 }
                 event.preventDefault();
-                const n = selectedNode()
+                const n = getSelectedNode()
 
                 const nextNode = traverse(n, dir)
                 if (nextNode) {
@@ -255,12 +288,13 @@ function App() {
         })
     })
     return (
-        <Ctx.Provider value={{ selectedNode: selectedNode, setSelectedNode: setSelectedNode }}>
+        <Ctx.Provider value={{ selectedNode: [getSelectedNode, setSelectedNode], movableNode: [getMovableNode, setMovableNode] }}>
             <div style="display: flex; flex-direction: column; height: 100%; width: 100%;">
                 <div>
                     h/j/k/l for direction (or arrow keys);
                     Hold shift and then press direction for new tile;
                     "d" for delete;
+                    Space for toggling movable node, then Shift+Direction to move;
                     "r" for reset
                 </div>
                 <div style="display: flex; border: 1px solid blue; height: 100%; width: 100%;">
