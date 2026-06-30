@@ -287,24 +287,28 @@ function App() {
                     position: 'fixed',
                     zIndex: 9999,
                 })
+                deletableNodeRef.style.visibility = 'hidden'
                 document.body.appendChild(clone)
+                clone.animate([
+                    { transform: `scale(1, 1)` },
+                    { transform: 'scale(0, 0)' }
+                ],
+                    {
+                        duration: 250,
+                        easing: 'ease-out',
+                        fill: 'forwards'
+                    })
+                    .finished.then(() => {
+                        if (clone)
+                            document.body.removeChild(clone);
+                        deleteNode()
+
+                        requestAnimationFrame(() => {
+                            const finalSizes = getBoxSizes(boxRefs)
+                            animateBoxes(boxRefs, initialSizes, finalSizes, parentDir === "h" ? "u" : "l")
+                        })
+                    });
             }
-            deleteNode()
-            requestAnimationFrame(() => {
-                const finalSizes = getBoxSizes(boxRefs)
-                animateBoxes(boxRefs, initialSizes, finalSizes, parentDir === "h" ? "u" : "l")
-                if (clone) {
-                    clone.animate([
-                        { transform: `scale(1, 1)` },
-                        { transform: `scale(${parentDir === "h" ? "0, 1" : "1, 0"})` }
-                    ],
-                        {
-                            duration: 250,
-                            easing: 'ease-out',
-                            fill: 'forwards'
-                        }).finished.then(() => { document.body.removeChild(clone) });
-                }
-            })
         } else {
             deleteNode()
         }
