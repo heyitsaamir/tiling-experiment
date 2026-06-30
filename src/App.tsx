@@ -52,7 +52,9 @@ function animateBoxes(
     initialiSizes: Map<string, DOMRect>,
     finalSizes: Map<string, DOMRect>,
     dir: Dir,
+    flipOrigin?: boolean,
 ) {
+    flipOrigin ??= false
     refs.forEach((ref, key) => {
         const firstRect = initialiSizes.get(key)
         const lastRect = finalSizes.get(key)
@@ -90,8 +92,8 @@ function animateBoxes(
         const sx = lastRect.width ? initialRect.width / lastRect.width : 0
         const sy = lastRect.height ? initialRect.height / lastRect.height : 0
 
-        const horizontalTransformOrigin = dx > 0 ? 'right' : 'left'
-        const verticalTransformOrigin = dy > 0 ? 'bottom' : 'top'
+        const horizontalTransformOrigin = dx > 0 && !flipOrigin ? 'right' : 'left' // it's going to end up more on the right
+        const verticalTransformOrigin = dy > 0 && !flipOrigin ? 'bottom' : 'top'
         ref.style.transformOrigin = `${verticalTransformOrigin} ${horizontalTransformOrigin}`
         ref.animate(
             [
@@ -305,7 +307,7 @@ function App() {
 
                         requestAnimationFrame(() => {
                             const finalSizes = getBoxSizes(boxRefs)
-                            animateBoxes(boxRefs, initialSizes, finalSizes, parentDir === "h" ? "u" : "l")
+                            animateBoxes(boxRefs, initialSizes, finalSizes, parentDir === "h" ? "u" : "l", true)
                         })
                     });
             }
