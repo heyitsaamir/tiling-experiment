@@ -318,9 +318,9 @@ function App() {
         const existingTile = getSelectedNode()
         if (!existingTile) return
 
-        const movableNode = getMovableNode()
+        let movableNode = getMovableNode()
         if (movableNode == existingTile) {
-            return
+            movableNode = null
         }
         const initialSizes = getBoxSizes(boxRefs)
         if (movableNode) {
