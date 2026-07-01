@@ -306,9 +306,10 @@ function App() {
                 })
                 deletableNodeRef.style.visibility = 'hidden'
                 document.body.appendChild(clone)
+                const finalScale = parentDir == "h" ? 'scale(0, 1)' : 'scale(1, 0)'
                 clone.animate([
                     { transform: `scale(1, 1)` },
-                    { transform: 'scale(0, 0)' }
+                    { transform: finalScale }
                 ],
                     {
                         duration: 250,
@@ -318,13 +319,15 @@ function App() {
                     .finished.then(() => {
                         if (clone)
                             document.body.removeChild(clone);
-                        deleteNode()
-
-                        requestAnimationFrame(() => {
-                            const finalSizes = getBoxSizes(boxRefs)
-                            animateBoxes(boxRefs, initialSizes, finalSizes, parentDir === "h" ? "u" : "l", true)
-                        })
                     });
+                setTimeout(() => {
+                    deleteNode()
+
+                    requestAnimationFrame(() => {
+                        const finalSizes = getBoxSizes(boxRefs)
+                        animateBoxes(boxRefs, initialSizes, finalSizes, parentDir === "h" ? "u" : "l", true)
+                    })
+                }, 250 * 0.75)
             }
         } else {
             deleteNode()
