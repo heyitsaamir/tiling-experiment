@@ -13,12 +13,6 @@ import './App.css'
 type Children = ParentNodeData | NodeData
 
 type Dir = 'u' | 'd' | 'r' | 'l'
-const oppositeDir: Record<Dir, Dir> = {
-    'u': 'd',
-    'd': 'u',
-    'r': 'l',
-    'l': 'r'
-}
 
 interface ParentNodeData {
     type: 'parent'
