@@ -13,6 +13,12 @@ import './App.css'
 type Children = ParentNodeData | NodeData
 
 type Dir = 'u' | 'd' | 'r' | 'l'
+const oppositeDir: Record<Dir, Dir> = {
+    'u': 'd',
+    'd': 'u',
+    'r': 'l',
+    'l': 'r'
+}
 
 interface ParentNodeData {
     type: 'parent'
@@ -68,7 +74,9 @@ function animateBoxes(
                 width: firstRect.width,
                 height: firstRect.height,
             }
-            : { top: lastRect!.top, left: lastRect!.left, width: lastRect!.width, height: lastRect!.height }
+            : {
+                top: lastRect!.top, left: lastRect!.left, width: ["l", "r"].includes(dir) ? 0 : lastRect!.width, height: ['u', 'd'].includes(dir) ? 0 : lastRect!.height
+            }
 
         if (!firstRect) {
             switch (dir) {
@@ -87,19 +95,32 @@ function animateBoxes(
                     break
             }
         }
-        const dx = initialRect.left - lastRect.left
-        const dy = initialRect.top - lastRect.top
+        const initialCenterX = initialRect.left + initialRect.width / 2
+        const initialCenterY = initialRect.top + initialRect.height / 2
+
+        const finalCenterX = lastRect.left + lastRect.width / 2
+        const finalCenterY = lastRect.top + lastRect.height / 2
+
+        const dx = initialCenterX - finalCenterX
+        const dy = initialCenterY - finalCenterY
         const sx = lastRect.width ? initialRect.width / lastRect.width : 0
         const sy = lastRect.height ? initialRect.height / lastRect.height : 0
 
-        const horizontalTransformOrigin = dx > 0 && !flipOrigin ? 'right' : 'left' // it's going to end up more on the right
-        const verticalTransformOrigin = dy > 0 && !flipOrigin ? 'bottom' : 'top'
-        ref.style.transformOrigin = `${verticalTransformOrigin} ${horizontalTransformOrigin}`
-        ref.animate(
-            [
+        const keyFrames: Keyframe[] = []
+        if (firstRect) {
+            keyFrames.push(
                 { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` },
                 { transform: 'translate(0, 0) scale(1, 1)' },
-            ],
+            )
+        } else {
+            keyFrames.push(
+                { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, offset: 0 },
+                { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, offset: 0.5 },
+                { transform: 'translate(0, 0) scale(1, 1)' },
+            )
+        }
+        ref.animate(
+            keyFrames,
             {
                 duration: 250,
                 easing: 'ease-out',
