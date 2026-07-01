@@ -253,33 +253,29 @@ function App() {
         const node = inputNode ?? getSelectedNode()
         if (!node) return
         const parentDir = node.parent?.split
-        const deleteNode = () => {
-            const isFirst = node.parent?.children.indexOf(node) === 0
-            let dirToTry: Dir[]
-            if (parentDir === 'h') {
-                dirToTry = ['l', 'r']
-                if (isFirst) {
-                    dirToTry.reverse()
-                }
-                dirToTry.push('u', 'd')
-            } else {
-                dirToTry = ['u', 'd']
-                if (isFirst) {
-                    dirToTry.reverse()
-                }
-                dirToTry.push('l', 'r')
+        const isFirst = node.parent?.children.indexOf(node) === 0
+        let dirToTry: Dir[]
+        if (parentDir === 'h') {
+            dirToTry = ['l', 'r']
+            if (isFirst) {
+                dirToTry.reverse()
             }
+            dirToTry.push('u', 'd')
+        } else {
+            dirToTry = ['u', 'd']
+            if (isFirst) {
+                dirToTry.reverse()
+            }
+            dirToTry.push('l', 'r')
+        }
 
-            let traversedNode: NodeData | null = null
-            for (let i = 0; i < dirToTry.length; i++) {
-                const dir = dirToTry[i]
-                traversedNode = traverse(node, dir)
-                if (traversedNode) break
-            }
-            if (!traversedNode) {
-                console.error("Can't remove last node")
-                return
-            }
+        let traversedNode: NodeData | null = null
+        for (let i = 0; i < dirToTry.length; i++) {
+            const dir = dirToTry[i]
+            traversedNode = traverse(node, dir)
+            if (traversedNode) break
+        }
+        const deleteNode = () => {
             remove(node)
             if (getMovableNode() === node) {
                 setMovableNode(null)
@@ -289,6 +285,10 @@ function App() {
             boxRefs.delete(node.id)
         }
 
+        if (!traversedNode) {
+            console.error("Can't remove last node")
+            return
+        }
         if (animate) {
             const initialSizes = getBoxSizes(boxRefs)
             const deletableNodeSize = initialSizes.get(node.id);
