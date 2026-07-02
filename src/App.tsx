@@ -89,24 +89,45 @@ function animateBoxes(
                     break
             }
         }
-        const initialCenterX = initialRect.left + initialRect.width / 2
-        const initialCenterY = initialRect.top + initialRect.height / 2
-
-        const finalCenterX = lastRect.left + lastRect.width / 2
-        const finalCenterY = lastRect.top + lastRect.height / 2
-
-        const dx = initialCenterX - finalCenterX
-        const dy = initialCenterY - finalCenterY
-        const sx = lastRect.width ? initialRect.width / lastRect.width : 0
-        const sy = lastRect.height ? initialRect.height / lastRect.height : 0
 
         const keyFrames: Keyframe[] = []
         if (firstRect) {
+            const initialCenterX = initialRect.left + initialRect.width / 2
+            const initialCenterY = initialRect.top + initialRect.height / 2
+
+            const finalCenterX = lastRect.left + lastRect.width / 2
+            const finalCenterY = lastRect.top + lastRect.height / 2
+
+            const dx = initialCenterX - finalCenterX
+            const dy = initialCenterY - finalCenterY
+            const sx = lastRect.width ? initialRect.width / lastRect.width : 0
+            const sy = lastRect.height ? initialRect.height / lastRect.height : 0
             keyFrames.push(
                 { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` },
                 { transform: 'translate(0, 0) scale(1, 1)' },
             )
         } else {
+            let dx: number;
+            let dy: number;
+            let sx: number;
+            let sy: number;
+            if (["u", "d"].includes(dir)) {
+                dx = 0
+                sx = 1;
+                dy = lastRect.height / 2
+                sy = 0
+                if (dir === "u") {
+                    dy *= -1
+                }
+            } else {
+                dy = 0
+                sy = 1;
+                dx = lastRect.width / 2
+                sx = 0
+                if (dir === "l") {
+                    dx *= -1
+                }
+            }
             keyFrames.push(
                 { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, offset: 0 },
                 { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, offset: 0.5 },
@@ -134,7 +155,7 @@ function Node(props: { node: NodeData }) {
 
         const background = isSelected ? 'lightsalmon' : ''
         const borderColor = isMovable ? 'blue' : isSelected ? 'black' : 'orange'
-        return `display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; outline: ${borderSize}px solid ${borderColor}; background-color: ${background};`
+        return `display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; outline: ${borderSize}px solid ${borderColor}; background-color: ${background}; border-radius: 5px;`
     }
 
     return (
@@ -225,7 +246,7 @@ function App() {
         type: 'node',
         name: '0',
         parent: null,
-        id: Math.random().toString(),
+        id: '0',
     })
     const [getSelectedNode, setSelectedNode] = createSignal<NodeData | null>(null)
     const [getMovableNode, setMovableNode] = createSignal<NodeData | null>(null)
@@ -233,7 +254,7 @@ function App() {
     const boxRefs = new Map<string, HTMLDivElement>()
 
     const onReset = () => {
-        setTile({ type: 'node', name: '0', parent: null, id: Math.random().toString() })
+        setTile({ type: 'node', name: '0', parent: null, id: '0' })
         setSelectedNode(null)
         setTileCount(0)
     }
@@ -354,7 +375,7 @@ function App() {
                     type: 'node' as const,
                     name: (tileCount() + 1).toString(),
                     parent: null,
-                    id: Math.random().toString(),
+                    id: (tileCount() + 1).toString(),
                 }
         setTileCount(tileCount() + 1)
         setSelectedNode(newTile)
@@ -488,7 +509,7 @@ function App() {
                     "d" for delete; Space for toggling movable node, then Shift+Direction to move; "r" for
                     reset
                 </div>
-                <div style="display: flex; border: 1px solid blue; height: 100%; width: 100%;">
+                <div style="display: flex; height: 100%; width: 100%;">
                     <Show when={tile()} keyed>
                         {(currentTile) =>
                             currentTile.type === 'parent' ? (
